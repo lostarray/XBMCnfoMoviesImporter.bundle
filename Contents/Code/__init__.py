@@ -256,72 +256,8 @@ class XBMCNFO(PlexAgent):
         # Movie name from folder
         movie_name = get_movie_name_from_folder(folder_path, False)
 
-        if not preferences['localmediaagent']:
-            poster_names = [
-                # Frodo
-                get_related_file(path1, '-poster.jpg'),
-                '{movie}-poster.jpg'.format(movie=movie_name_with_year),
-                '{movie}-poster.jpg'.format(movie=movie_name),
-                os.path.join(folder_path, 'poster.jpg'),
-            ]
-            if is_dvd:
-                poster_names.append(os.path.join(folder_path_dvd, 'poster.jpg'))
-            # Eden
-            poster_names.append(get_related_file(path1, '.tbn'))
-            poster_names.append('{path}/folder.jpg'.format(path=folder_path))
-            if is_dvd:
-                poster_names.append(os.path.join(folder_path_dvd, 'folder.jpg'))
-            # DLNA
-            poster_names.append(get_related_file(path1, '.jpg'))
-            # Others
-            poster_names.append('{path}/cover.jpg'.format(path=folder_path))
-            if is_dvd:
-                poster_names.append(os.path.join(folder_path_dvd, 'cover.jpg'))
-            poster_names.append('{path}/default.jpg'.format(path=folder_path))
-            if is_dvd:
-                poster_names.append(os.path.join(folder_path_dvd, 'default.jpg'))
-            poster_names.append('{path}/movie.jpg'.format(path=folder_path))
-            if is_dvd:
-                poster_names.append(os.path.join(folder_path_dvd, 'movie.jpg'))
-
-            # check possible poster file locations
-            poster_filename = check_file_paths(poster_names, 'poster')
-
-            if poster_filename:
-                poster_data = load_file(poster_filename)
-                for key in metadata.posters.keys():
-                    del metadata.posters[key]
-                metadata.posters[poster_filename] = MediaProxy(poster_data)
-
-
-            fanart_names = [
-                # Eden / Frodo
-                get_related_file(path1, '-fanart.jpg'),
-                '{movie}-fanart.jpg'.format(movie=movie_name_with_year),
-                '{movie}-fanart.jpg'.format(movie=movie_name),
-                os.path.join(folder_path, 'fanart.jpg'),
-            ]
-            if is_dvd:
-                fanart_names.append(os.path.join(folder_path_dvd, 'fanart.jpg'))
-            # Others
-            fanart_names.append(os.path.join(folder_path, 'art.jpg'))
-            if is_dvd:
-                fanart_names.append(os.path.join(folder_path_dvd, 'art.jpg'))
-            fanart_names.append(os.path.join(folder_path, 'backdrop.jpg'))
-            if is_dvd:
-                fanart_names.append(os.path.join(folder_path_dvd, 'backdrop.jpg'))
-            fanart_names.append(os.path.join(folder_path, 'background.jpg'))
-            if is_dvd:
-                fanart_names.append(os.path.join(folder_path_dvd, 'background.jpg'))
-
-            # check possible fanart file locations
-            fanart_filename = check_file_paths(fanart_names, 'fanart')
-
-            if fanart_filename:
-                fanart_data = load_file(fanart_filename)
-                for key in metadata.art.keys():
-                    del metadata.art[key]
-                metadata.art[fanart_filename] = MediaProxy(fanart_data)
+        nfo_poster_name = None
+        nfo_fanart_name = None
 
         nfo_names = [
             # Eden / Frodo
@@ -780,6 +716,19 @@ class XBMCNFO(PlexAgent):
                             log.debug ('failed setting linked actor photo!')
                             pass
 
+                # Poster
+                try:
+                    nfo_poster_name = nfo_xml.xpath('poster')[0].text.strip()
+                except:
+                    log.debug('No <poster> tag in {nfo}.'.format(nfo=nfo_file))
+                    pass
+                # Fanart
+                try:
+                    nfo_fanart_name = nfo_xml.xpath('fanart')[0].text.strip()
+                except:
+                    log.debug('No <fanart> tag in {nfo}.'.format(nfo=nfo_file))
+                    pass
+
                 if not preferences['localmediaagent']:
                     # Trailer Support
                     # Eden / Frodo
@@ -909,7 +858,79 @@ class XBMCNFO(PlexAgent):
             else:
                 log.info('ERROR: No <movie> tag in {nfo}.'
                          ' Aborting!'.format(nfo=nfo_file))
-            return metadata
+
+        if not preferences['localmediaagent']:
+            poster_names = [
+                # Frodo
+                get_related_file(path1, '-poster.jpg'),
+                '{movie}-poster.jpg'.format(movie=movie_name_with_year),
+                '{movie}-poster.jpg'.format(movie=movie_name),
+                os.path.join(folder_path, 'poster.jpg'),
+            ]
+            if (nfo_poster_name):
+                poster_names.insert(0, os.path.join(folder_path, nfo_poster_name))
+            if is_dvd:
+                poster_names.append(os.path.join(folder_path_dvd, 'poster.jpg'))
+            # Eden
+            poster_names.append(get_related_file(path1, '.tbn'))
+            poster_names.append('{path}/folder.jpg'.format(path=folder_path))
+            if is_dvd:
+                poster_names.append(os.path.join(folder_path_dvd, 'folder.jpg'))
+            # DLNA
+            poster_names.append(get_related_file(path1, '.jpg'))
+            # Others
+            poster_names.append('{path}/cover.jpg'.format(path=folder_path))
+            if is_dvd:
+                poster_names.append(os.path.join(folder_path_dvd, 'cover.jpg'))
+            poster_names.append('{path}/default.jpg'.format(path=folder_path))
+            if is_dvd:
+                poster_names.append(os.path.join(folder_path_dvd, 'default.jpg'))
+            poster_names.append('{path}/movie.jpg'.format(path=folder_path))
+            if is_dvd:
+                poster_names.append(os.path.join(folder_path_dvd, 'movie.jpg'))
+
+            # check possible poster file locations
+            poster_filename = check_file_paths(poster_names, 'poster')
+
+            if poster_filename:
+                poster_data = load_file(poster_filename)
+                for key in metadata.posters.keys():
+                    del metadata.posters[key]
+                metadata.posters[poster_filename] = MediaProxy(poster_data)
+
+            fanart_names = [
+                # Eden / Frodo
+                get_related_file(path1, '-fanart.jpg'),
+                '{movie}-fanart.jpg'.format(movie=movie_name_with_year),
+                '{movie}-fanart.jpg'.format(movie=movie_name),
+                os.path.join(folder_path, 'fanart.jpg'),
+            ]
+            if nfo_fanart_name:
+                fanart_names.insert(0, os.path.join(folder_path, nfo_fanart_name))
+            if is_dvd:
+                fanart_names.append(os.path.join(folder_path_dvd, 'fanart.jpg'))
+            # Others
+            fanart_names.append(os.path.join(folder_path, 'art.jpg'))
+            if is_dvd:
+                fanart_names.append(os.path.join(folder_path_dvd, 'art.jpg'))
+            fanart_names.append(os.path.join(folder_path, 'backdrop.jpg'))
+            if is_dvd:
+                fanart_names.append(os.path.join(folder_path_dvd, 'backdrop.jpg'))
+            fanart_names.append(os.path.join(folder_path, 'background.jpg'))
+            if is_dvd:
+                fanart_names.append(os.path.join(folder_path_dvd, 'background.jpg'))
+
+            # check possible fanart file locations
+            fanart_filename = check_file_paths(fanart_names, 'fanart')
+
+            if fanart_filename:
+                fanart_data = load_file(fanart_filename)
+                for key in metadata.art.keys():
+                    del metadata.art[key]
+                metadata.art[fanart_filename] = MediaProxy(fanart_data)
+
+        return metadata
+
 
 xbmcnfo = XBMCNFO
 
